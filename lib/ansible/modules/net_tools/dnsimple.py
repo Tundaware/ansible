@@ -152,6 +152,22 @@ except ImportError:
 
 from ansible.module_utils.basic import AnsibleModule
 
+def getRecordType(dict):
+  if 'record_type' in dict:
+    return dict['record_type']
+  elif 'type' in dict:
+    return dict['type']
+  else:
+    return None
+
+def getPriority(dict):
+  if 'priority' in dict:
+    return dict['priority']
+  elif 'prio' in dict:
+    return dict['prio']
+  else:
+    return None
+
 
 def main():
     module = AnsibleModule(
@@ -244,13 +260,13 @@ def main():
             if not value:
                 module.fail_json(msg="Missing the record value")
 
-            rr = next((r for r in records if r['name'] == record and r['record_type'] == record_type and r['content'] == value), None)
+            rr = next((r for r in records if r['name'] == record and getRecordType(r) == record_type and r['content'] == value), None)
 
             if state == 'present':
                 changed = False
                 if is_solo:
                     # delete any records that have the same name and record type
-                    same_type = [r['id'] for r in records if r['name'] == record and r['record_type'] == record_type]
+                    same_type = [r['id'] for r in records if r['name'] == record and getRecordType(r) == record_type]
                     if rr:
                         same_type = [rid for rid in same_type if rid != rr['id']]
                     if same_type:
@@ -260,7 +276,7 @@ def main():
                         changed = True
                 if rr:
                     # check if we need to update
-                    if rr['ttl'] != ttl or rr['prio'] != priority:
+                    if rr['ttl'] != ttl or getPriority(rr) != priority:
                         data = {}
                         if ttl:
                             data['ttl'] = ttl
